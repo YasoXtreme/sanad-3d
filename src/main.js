@@ -155,6 +155,25 @@ readTheme();
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readTheme);
 new MutationObserver(readTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
+// light / dark toggle: an explicit choice overrides the system setting and is remembered
+const darkQuery = matchMedia('(prefers-color-scheme: dark)');
+const isDark = () => (document.documentElement.dataset.theme ?? (darkQuery.matches ? 'dark' : 'light')) === 'dark';
+function syncThemeButton() {
+  const next = isDark() ? 'light' : 'dark';
+  const btn = $('#theme');
+  btn.querySelector('span').textContent = `${next}_mode`;
+  btn.setAttribute('aria-label', `Switch to ${next} mode`);
+  btn.title = `Switch to ${next} mode`;
+}
+$('#theme').addEventListener('click', () => {
+  const next = isDark() ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem('theme', next); } catch {}
+  syncThemeButton();
+});
+darkQuery.addEventListener('change', syncThemeButton);
+syncThemeButton();
+
 // ---------------------------------------------------------------------------
 // load the print files, then build the scene
 

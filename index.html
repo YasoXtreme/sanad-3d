@@ -9,8 +9,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Elms+Sans:wght@400..900&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,600,0,0&icon_names=cable,center_focus_strong,check,content_cut,error,label,layers,pause,play_arrow,playlist_play,replay,skip_next,skip_previous,speed,warning&display=block">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,600,0,0&icon_names=cable,center_focus_strong,check,content_cut,dark_mode,error,label,layers,light_mode,pause,play_arrow,playlist_play,replay,skip_next,skip_previous,speed,warning&display=block">
 <link rel="stylesheet" href="styles.css">
+<script>try { const t = localStorage.getItem('theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch {}</script>
 <script type="importmap">
 {
   "imports": {
@@ -33,6 +34,7 @@
       <li><b>4</b> printed parts</li>
       <li class="date">Guide of 3 Nov 2026</li>
     </ul>
+    <button class="icon-btn theme-btn" id="theme" type="button" aria-label="Switch to dark mode" title="Switch to dark mode"><span class="material-symbols-outlined" aria-hidden="true">dark_mode</span></button>
   </header>
 
   <main class="work">

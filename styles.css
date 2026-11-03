@@ -111,6 +111,9 @@ h1 {
 }
 .specs li b { font-weight: 900; }
 .specs .date { background: transparent; border-style: dashed; color: var(--muted); }
+.top .specs { margin-left: auto; }
+.theme-btn { width: 36px; height: 36px; border-width: var(--b-hair); color: var(--ink); }
+.theme-btn .material-symbols-outlined { font-size: 20px; }
 
 .work {
   display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 22px; min-height: 0;
