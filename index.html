@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sanad Band Assembly</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Step-by-step animated 3D assembly of the Sanad wrist band body: the four printed parts, both layers of electronics, the lid, the strap.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Elms+Sans:wght@400..900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,600,0,0&icon_names=cable,center_focus_strong,check,content_cut,error,label,layers,pause,play_arrow,playlist_play,replay,skip_next,skip_previous,speed,warning&display=block">
+<link rel="stylesheet" href="styles.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <p class="eyebrow">Sanad wearable · band body v1</p>
+      <h1>Assembly, step by step</h1>
+    </div>
+    <ul class="specs" aria-label="Key dimensions">
+      <li><b>43.0 × 54.6 × 14.5</b> mm</li>
+      <li><b>22</b> mm strap</li>
+      <li><b>4</b> printed parts</li>
+      <li class="date">Guide of 3 Nov 2026</li>
+    </ul>
+  </header>
+
+  <main class="work">
+    <section class="stage" aria-label="3D assembly view">
+      <div class="viewport" id="viewport">
+        <canvas id="scene" aria-label="Animated 3D model of the band being assembled"></canvas>
+        <svg class="leaders" id="leaders" aria-hidden="true"></svg>
+        <div class="labels" id="labels" aria-hidden="true"></div>
+
+        <div class="tools" role="toolbar" aria-label="View">
+          <button class="pill" id="t-xray" type="button"><span class="material-symbols-outlined" aria-hidden="true">layers</span>X-ray</button>
+          <button class="pill" id="t-section" type="button"><span class="material-symbols-outlined" aria-hidden="true">content_cut</span>Section</button>
+          <button class="pill" id="t-labels" type="button"><span class="material-symbols-outlined" aria-hidden="true">label</span>Labels</button>
+          <button class="pill" id="t-wires" type="button"><span class="material-symbols-outlined" aria-hidden="true">cable</span>Wires</button>
+          <button class="pill reset" id="reset-view" type="button" title="Hand the camera back to the guided view"><span class="material-symbols-outlined" aria-hidden="true">center_focus_strong</span>Guided view</button>
+        </div>
+
+        <div class="hud" id="hud" aria-live="polite"></div>
+        <p class="caption" id="caption" aria-live="polite"></p>
+        <p class="grid-note">Grid squares are 10 mm · drag to orbit, scroll to zoom</p>
+
+        <div class="loading" id="loading">
+          <p class="eyebrow">Loading the print files</p>
+          <div class="load-track"><div class="load-bar" id="load-bar"></div></div>
+          <p class="load-count"><span id="load-count">0 of 4</span> · body, sensor pad, tray, lid</p>
+        </div>
+      </div>
+
+      <div class="transport">
+        <div class="btns">
+          <button class="icon-btn" id="prev" type="button" aria-label="Previous step"><span class="material-symbols-outlined" aria-hidden="true">skip_previous</span></button>
+          <button class="icon-btn primary" id="play" type="button" aria-label="Play"><span class="material-symbols-outlined" aria-hidden="true">play_arrow</span></button>
+          <button class="icon-btn" id="next" type="button" aria-label="Next step"><span class="material-symbols-outlined" aria-hidden="true">skip_next</span></button>
+          <button class="icon-btn" id="replay" type="button" aria-label="Replay this step"><span class="material-symbols-outlined" aria-hidden="true">replay</span></button>
+        </div>
+        <div class="scrubber">
+          <div class="scrub-meta"><span id="step-no">Step 00 of 12</span><span id="time">0:00 / 0:09</span></div>
+          <div class="scrub-wrap">
+            <input type="range" id="scrub" min="0" max="9000" step="10" value="0" aria-label="Position in this step">
+            <div class="ticks" id="ticks" aria-hidden="true"></div>
+          </div>
+        </div>
+        <div class="opts">
+          <button class="pill" id="speed" type="button" aria-label="Playback speed"><span class="material-symbols-outlined" aria-hidden="true">speed</span><span class="v">1×</span></button>
+          <button class="pill" id="play-all" type="button" title="Keep going into the next step"><span class="material-symbols-outlined" aria-hidden="true">playlist_play</span>Play all</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="guide" aria-label="Steps">
+      <ol class="steps" id="steps"></ol>
+      <p class="foot">Wording from the Sanad band print &amp; assembly guide (v1). Part sizes are the model’s conservative estimates; wire paths are drawn schematically.</p>
+    </aside>
+  </main>
+</div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
