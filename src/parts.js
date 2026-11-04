@@ -10,7 +10,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { toCreasedNormals } from 'three/addons/utils/BufferGeometryUtils.js';
-import { picoPin, maxPin, mpuPin, tpPad, MAX_PINS, MPU_PINS } from './layout.js';
+import { picoPinLocal, maxPin, mpuPin, tpPad, MAX_PINS, MPU_PINS } from './layout.js';
 
 export const COLOR = {
   body: 0xb7bdc8, pad: 0x2a2a2f, tray: 0xe2c47e, lid: 0xf2f1e9,
@@ -222,11 +222,12 @@ export function buildParts(L, world, stl) {
 
   // ---------------- Raspberry Pi Pico 2 W ----------------
   {
-    const pivot = [L.pico_cx, L.pico_y0, L.pico_zb];
-    const o = P.obj('pico', pivot, { initial: { pt: p.stub, pb: 0 } });
+    // built parts-up; the home pose turns it over about its long axis, through the PCB
+    const pivot = [L.pico_cx, L.pico_y0, L.pico_mid];
+    const o = P.obj('pico', pivot, { initial: { pt: p.hdr_tail, pb: p.hdr_plastic + p.hdr_long, r: [0, 180, 0] } });
     const x0 = L.pico_x0, x1 = L.pico_x1, y0 = L.pico_y0, y1 = L.pico_y1;
     const pinXY = [];
-    for (let n = 1; n <= 40; n++) pinXY.push(picoPin(L, n));
+    for (let n = 1; n <= 40; n++) pinXY.push(picoPinLocal(L, n));
     const tex = canvasTex(p.pico_W, p.pico_L, (ctx, W, H) => {
       const X = (x) => x - x0, Y = (y) => y1 - y;
       ctx.fillStyle = hex(COLOR.pcbGreen); ctx.fillRect(0, 0, W, H);
@@ -249,7 +250,7 @@ export function buildParts(L, world, stl) {
         }
       }
       silk(ctx, 'Raspberry Pi Pico 2 W', W / 2 - 1.6, H * 0.43, 1.25, { rot: Math.PI / 2 });
-      silk(ctx, 'BOOTSEL', X(L.pico_cx - 4.6), Y(y0 + 15.6), 0.8);
+      silk(ctx, 'BOOTSEL', X(L.pico_cx + 4.6), Y(y0 + 15.6), 0.8);
       silk(ctx, '1', X(pinXY[0][0]) - 1.7, Y(pinXY[0][1]), 0.9);
       silk(ctx, '20', X(pinXY[19][0]) - 1.9, Y(pinXY[19][1]), 0.9);
       silk(ctx, '40', X(pinXY[39][0]) + 1.9, Y(pinXY[39][1]), 0.9);
@@ -259,33 +260,35 @@ export function buildParts(L, world, stl) {
     });
     P.board(o, x0, x1, y0, y1, L.pico_zb, L.pico_zt, COLOR.pcbGreen, tex);
     const zt = L.pico_zt;
-    // micro-USB receptacle
+    // micro-USB receptacle: 2.73 mm above the PCB, dipping 0.77 mm past it at the board edge
     const usb = P.add(o, rboxGeo(L.pico_cx - p.pico_usb_w / 2, L.pico_cx + p.pico_usb_w / 2,
-      y0 - p.pico_usb_overhang, y0 + 4.0, zt, zt + 2.7, 0.5), metal(o));
+      y0 - p.pico_usb_overhang, y0 + 4.0, zt, zt + p.pico_usb_h, 0.5), metal(o));
     usb.name = 'pico-usb';
+    P.add(o, rboxGeo(L.pico_cx - p.pico_usb_w / 2, L.pico_cx + p.pico_usb_w / 2,
+      y0 - p.pico_usb_overhang, y0, zt - p.pico_usb_sink, zt + p.pico_usb_h, 0.5), metal(o));
     P.add(o, boxGeo(L.pico_cx - 3.2, L.pico_cx + 3.2, y0 - p.pico_usb_overhang - 0.02, y0 - p.pico_usb_overhang + 0.4,
-      zt + 0.7, zt + 2.0), blackM(o), { edges: false });
+      zt + 0.33, zt + 1.63), blackM(o), { edges: false });
     // RP2350, flash, wireless module can, BOOTSEL button, regulator, LED
     P.add(o, boxGeo(L.pico_cx - 3.5, L.pico_cx + 3.5, y0 + 22, y0 + 29, zt, zt + 0.85), blackM(o));
     P.add(o, boxGeo(L.pico_cx + 1.5, L.pico_cx + 6.5, y0 + 14, y0 + 18.5, zt, zt + 1.2), blackM(o));
     P.add(o, rboxGeo(L.pico_cx - 5.2, L.pico_cx + 5.2, y0 + 32, y0 + 41.5, zt, zt + 1.5, 0.3), metal(o));
-    P.add(o, boxGeo(L.pico_cx - 6.3, L.pico_cx - 2.9, y0 + 10.5, y0 + 14.5, zt, zt + 1.3), metal(o));
-    P.add(o, cylZGeo(L.pico_cx - 4.6, y0 + 12.5, 1.1, zt + 1.3, zt + 2.1, 16), P.mat(o, COLOR.white));
+    P.add(o, boxGeo(L.pico_cx + 2.9, L.pico_cx + 6.3, y0 + 10.5, y0 + 14.5, zt, zt + 1.3), metal(o));
+    P.add(o, cylZGeo(L.pico_cx + 4.6, y0 + 12.5, 1.1, zt + 1.3, zt + 2.1, 16), P.mat(o, COLOR.white));
     P.add(o, boxGeo(L.pico_cx - 2.5, L.pico_cx + 0.5, y0 + 6.5, y0 + 9.5, zt, zt + 1.0), P.mat(o, 0x3a3a3f));
     P.add(o, boxGeo(L.pico_cx + 4.6, L.pico_cx + 5.6, y0 + 4.6, y0 + 5.4, zt, zt + 0.4), P.mat(o, 0x9be29b));
     P.pins(o, pinXY, zt, L.pico_zb, gold(o));
-    // plastic header strips (one per row), removed in step 3
-    const s = P.obj('pico_strip', [L.pico_cx, L.pico_y0 + p.pico_L / 2, L.pico_zb], { parent: 'pico', initial: { o: 0 } });
+    // plastic header strips (one per row), which stay on
+    const s = P.obj('pico_strip', [L.pico_cx, L.pico_y0 + p.pico_L / 2, L.pico_zb], { parent: 'pico' });
     const sm = blackM(s);
     for (const side of [-1, 1]) {
       const x = L.pico_cx + side * p.pico_row_dx / 2;
-      P.add(s, boxGeo(x - 1.27, x + 1.27, pinXY[0][1] - 1.27, pinXY[19][1] + 1.27, L.pico_zb - 2.5, L.pico_zb), sm);
+      P.add(s, boxGeo(x - 1.27, x + 1.27, pinXY[0][1] - 1.27, pinXY[19][1] + 1.27, L.pico_zb - p.hdr_plastic, L.pico_zb), sm);
     }
   }
 
-  // ---------------- MAX30102 (sensor face down) ----------------
+  // ---------------- MAX30102 (sensor face down, pin row toward the Pico) ----------------
   {
-    const bx0 = L.seat_x0, by0 = L.seat_y0, bx1 = bx0 + p.max_W_est, by1 = by0 + p.max_L_est;
+    const bx1 = L.seat_x1, by1 = L.seat_y1, bx0 = bx1 - p.max_W_est, by0 = by1 - p.max_L_est;
     const pivot = [(bx0 + bx1) / 2, (by0 + by1) / 2, L.max_zb];
     const o = P.obj('max', pivot, { initial: { pt: p.stub, pb: 0 } });
     const pinXY = MAX_PINS.map((n) => maxPin(L, n));
@@ -295,9 +298,9 @@ export function buildParts(L, world, stl) {
       MAX_PINS.forEach((name, i) => {
         const [x, y] = pinXY[i];
         ctx.fillStyle = '#d9b04a'; ctx.beginPath(); ctx.arc(X(x), Y(y), 0.85, 0, Math.PI * 2); ctx.fill();
-        silk(ctx, name, X(x) + 1.4, Y(y), 0.85, { align: 'left' });
+        silk(ctx, name, X(x) - 1.4, Y(y), 0.85, { align: 'right' });
       });
-      silk(ctx, 'MAX30102', W * 0.66, H * 0.5, 1.3, { rot: -Math.PI / 2 });
+      silk(ctx, 'MAX30102', W * 0.34, H * 0.5, 1.3, { rot: -Math.PI / 2 });
     });
     P.board(o, bx0, bx1, by0, by1, L.max_zb, L.max_zt, COLOR.pcbGreenMax, tex);
     // optical module on the underside, with its glass window and two LEDs
@@ -312,13 +315,13 @@ export function buildParts(L, world, stl) {
       P.mat(o, 0x5a3a7a), { edges: false });
     // tantalum caps and regulators on the sensor side
     const yellow = P.mat(o, 0xe8b53a, { roughness: 0.45 });
-    P.add(o, boxGeo(bx0 + 2.2, bx0 + 3.8, by0 + 2.2, by0 + 5.4, L.max_zb - 1.6, L.max_zb), yellow);
-    P.add(o, boxGeo(bx0 + 8.6, bx0 + 10.2, by0 + 13.4, by0 + 16.6, L.max_zb - 1.6, L.max_zb), yellow);
-    P.add(o, boxGeo(bx0 + 2.2, bx0 + 3.8, by0 + 13.6, by0 + 16.4, L.max_zb - 1.1, L.max_zb), blackM(o));
-    P.add(o, boxGeo(bx0 + 8.6, bx0 + 10.2, by0 + 2.4, by0 + 5.2, L.max_zb - 1.1, L.max_zb), blackM(o));
+    P.add(o, boxGeo(bx1 - 3.8, bx1 - 2.2, by1 - 5.4, by1 - 2.2, L.max_zb - 1.6, L.max_zb), yellow);
+    P.add(o, boxGeo(bx1 - 10.2, bx1 - 8.6, by1 - 16.6, by1 - 13.4, L.max_zb - 1.6, L.max_zb), yellow);
+    P.add(o, boxGeo(bx1 - 3.8, bx1 - 2.2, by1 - 16.4, by1 - 13.6, L.max_zb - 1.1, L.max_zb), blackM(o));
+    P.add(o, boxGeo(bx1 - 10.2, bx1 - 8.6, by1 - 5.2, by1 - 2.4, L.max_zb - 1.1, L.max_zb), blackM(o));
     P.pins(o, pinXY, L.max_zt, L.max_zb, gold(o));
     const s = P.obj('max_strip', [pinXY[3][0], pinXY[3][1], L.max_zb], { parent: 'max', initial: { o: 0 } });
-    P.add(s, boxGeo(pinXY[0][0] - 1.27, pinXY[0][0] + 1.27, pinXY[0][1] - 1.27, pinXY[6][1] + 1.27,
+    P.add(s, boxGeo(pinXY[0][0] - 1.27, pinXY[0][0] + 1.27, pinXY[6][1] - 1.27, pinXY[0][1] + 1.27,
       L.max_zb - 2.5, L.max_zb), blackM(s));
   }
 
@@ -328,10 +331,10 @@ export function buildParts(L, world, stl) {
     const z0 = L.motor_z0, z1 = z0 + p.motor_t;
     P.add(o, cylZGeo(L.motor_cx, L.motor_cy, p.motor_d / 2, z0, z1, 40), metal(o));
     P.add(o, cylZGeo(L.motor_cx, L.motor_cy, p.motor_d / 2 - 0.9, z1, z1 + 0.15, 40), P.mat(o, 0xe9e6dc), { edges: false });
-    const lead = (dy, color) => P.add(o, tubeGeo([[L.motor_cx - 4.6, L.motor_cy + dy, z1 - 0.4],
-      [L.motor_cx - 5.4, L.motor_cy + dy, z1 + 0.8], [L.motor_cx - 5.7, L.motor_cy + dy, z1 + 1.7]], 0.32, 12, 6),
+    const lead = (dy, color) => P.add(o, tubeGeo([[L.motor_cx + 4.6, L.motor_cy + dy, z1 - 0.4],
+      [L.motor_cx + 5.2, L.motor_cy + dy, z1 + 0.3], [L.motor_cx + 5.4, L.motor_cy + dy, z1 + 0.7]], 0.32, 12, 6),
     P.mat(o, color), { edges: false });
-    lead(0.5, WIRE.red); lead(-0.5, WIRE.blue);
+    lead(-0.6, WIRE.red); lead(0.6, WIRE.blue);
     o.update = (pose, g) => {
       const b = pose.buzz || 0;
       if (b > 0) {
@@ -370,18 +373,18 @@ export function buildParts(L, world, stl) {
     P.add(o, cylXGeo(cy, cz, 0.3, cx + len / 2, cx + len / 2 + leadL, 8), lead, { edges: false });
     return o;
   };
-  // 1N5817 Schottky: stripe end (-X) goes to VSYS
-  axial('d5817', 9.0, -22.5, L.z_floor + 1.35, 5.2, 1.35, COLOR.black, { x: -2.2, w: 0.7 }, 0xc9c9c9, 1.6);
+  // 1N5817 Schottky: stripe end (+X) goes to VSYS
+  axial('d5817', -7.8, -23.05, L.z_floor + 1.35, 5.2, 1.35, COLOR.black, { x: 2.2, w: 0.7 }, 0xc9c9c9, 1.6);
   // 1N4148: glass body, black stripe
-  axial('d4148', 9.2, -20.0, L.z_floor + 0.85, 3.6, 0.85, 0xe08a2a, { x: 1.3, w: 0.45 }, 0x1a1a1a, 1.8,
+  axial('d4148', -10.2, -16.95, L.z_floor + 0.85, 3.6, 0.85, 0xe08a2a, { x: 1.3, w: 0.45 }, 0x1a1a1a, 1.8,
     { roughness: 0.15, transparent: true, opacity: 0.9 });
   // 1 kOhm resistor: brown, black, red, gold
-  axial('r1k', 9.5, -17.4, L.z_floor + 0.9, 3.3, 0.9, 0xd8c39a,
+  axial('r1k', -10.3, -19.5, L.z_floor + 0.9, 3.3, 0.9, 0xd8c39a,
     [{ x: -1.0, w: 0.35, c: 0x6b3a1e }, { x: -0.4, w: 0.35, c: 0x1a1a1a }, { x: 0.2, w: 0.35, c: 0xc0392b },
       { x: 1.05, w: 0.35, c: 0xc9a43a }], null, 1.4);
   // 2N2222 / S8050 in TO-92, lying on its flat face, legs toward +Y
   {
-    const cx = 15.5, cy = -22.2;
+    const cx = -16.0, cy = -22.3;
     const o = P.obj('q1', [cx, cy, L.z_floor]);
     const half = new THREE.CylinderGeometry(2.3, 2.3, 4.6, 24, 1, false, -Math.PI / 2, Math.PI);
     half.rotateZ(0); // axis along Y already
@@ -507,10 +510,10 @@ export function buildParts(L, world, stl) {
     P.add(o, rboxGeo(bx0 + 0.5, bx1 - 0.5, by1, L.bat_y1, z0 + 0.4, z0 + 3.2, 0.5, 2),
       P.mat(o, COLOR.kapton, { roughness: 0.3 }), { angle: 50 });
     // short leads leaving the protection end (the rest is drawn in step 9)
-    const zl = z0 + 2.2;
-    P.add(o, tubeGeo([[bx0 + 1.6, L.bat_y1 - 0.3, zl], [bx0 + 1.2, L.bat_y1 + 0.9, zl + 0.3], [bx0 - 0.4, L.bat_y1 + 0.6, zl + 0.5]], 0.36, 12, 6),
+    const zl = z0 + 2.0;
+    P.add(o, tubeGeo([[-11.0, L.bat_y1 - 0.3, zl], [-11.0, L.bat_y1 - 0.1, zl], [-11.0, L.bat_y1 + 0.1, zl]], 0.36, 12, 6),
       P.mat(o, WIRE.red), { edges: false });
-    P.add(o, tubeGeo([[bx0 + 3.2, L.bat_y1 - 0.3, zl], [bx0 + 2.8, L.bat_y1 + 1.6, zl + 0.3], [bx0 - 0.2, L.bat_y1 + 1.5, zl + 0.6]], 0.36, 12, 6),
+    P.add(o, tubeGeo([[-13.0, L.bat_y1 - 0.3, zl], [-13.0, L.bat_y1 - 0.1, zl], [-13.0, L.bat_y1 + 0.1, zl]], 0.36, 12, 6),
       P.mat(o, WIRE.black), { edges: false });
   }
 
@@ -532,7 +535,7 @@ export function buildParts(L, world, stl) {
   // ---------------- MPU-6050 GY-521 ----------------
   {
     const x0 = L.mpu_x0, y0 = L.mpu_y0, x1 = x0 + p.mpu_W, y1 = y0 + p.mpu_L;
-    const o = P.obj('mpu', [(x0 + x1) / 2, (y0 + y1) / 2, L.mpu_zb], { initial: { pt: 0, pb: p.stub } });
+    const o = P.obj('mpu', [(x0 + x1) / 2, (y0 + y1) / 2, L.mpu_zb], { initial: { pt: p.stub, pb: 0 } });
     const pinXY = MPU_PINS.map((n) => mpuPin(L, n));
     const tex = canvasTex(p.mpu_W, p.mpu_L, (ctx, W, H) => {
       const X = (x) => x - x0, Y = (y) => y1 - y;
@@ -836,19 +839,19 @@ function buildFx(P, L) {
     o.update = (pose) => { const k = Math.max(0.001, pose.s ?? 1); blobs.forEach((b) => b.scale.setScalar(k)); };
     return o;
   };
-  glue('glue_pad', [[L.plug_x0 - 0.4, -9, L.z_floor + 0.2], [L.plug_x0 - 0.4, 2.5, L.z_floor + 0.2],
-    [10, L.plug_y0 - 0.4, L.z_floor + 0.2], [15.5, L.plug_y1 + 0.3, L.z_floor + 0.2, 0.8]]);
-  glue('glue_max', [[L.seat_x0 + p.max_W_est + 0.4, -12, L.max_zt - 0.2], [L.seat_x0 + p.max_W_est + 0.4, 1.5, L.max_zt - 0.2],
-    [8.5, L.seat_y0 + p.max_L_est + 0.4, L.max_zt - 0.2]]);
-  glue('glue_motor', [[L.motor_cx + 5.3, L.motor_cy - 1.5, L.z_floor + 0.5]]);
+  glue('glue_pad', [[L.plug_x1 + 0.4, -9, L.z_floor + 0.2], [L.plug_x1 + 0.4, 2.5, L.z_floor + 0.2],
+    [-10, L.plug_y0 - 0.4, L.z_floor + 0.2], [-15.5, L.plug_y1 + 0.3, L.z_floor + 0.2, 0.8]]);
+  glue('glue_max', [[L.seat_x1 - p.max_W_est + 0.2, -9, L.max_zt + 0.1], [L.seat_x1 - p.max_W_est + 0.2, 2, L.max_zt + 0.1],
+    [-12, L.seat_y1 - p.max_L_est - 0.1, L.max_zt - 0.2]]);
+  glue('glue_motor', [[L.motor_cx - 5.3, L.motor_cy - 1.5, L.z_floor + 0.5]]);
   glue('glue_btn', [[L.btn_cx, L.btn_y_back - 0.3, L.btn_z1 - 0.5, 1.1]]);
-  glue('glue_tp', [[L.tp_x1 + 0.4, -18, L.tp_zb + 0.6], [L.tp_x1 + 0.4, -8, L.tp_zb + 0.6, 0.8]]);
+  glue('glue_tp', [[L.tp_cx - 3, L.tp_y1 + 0.3, L.tp_zb + 0.6], [L.tp_cx + 3, L.tp_y1 + 0.3, L.tp_zb + 0.6, 0.8]]);
   glue('glue_sw', [[L.sw_x_c - p.sw_L / 2 - 0.4, L.sw_y0 + 2.2, L.tray_z1 + 1.0, 0.9],
     [L.sw_x_c + p.sw_L / 2 + 0.4, L.sw_y0 + 2.2, L.tray_z1 + 1.0, 0.9]]);
 
   // micro-USB cable plug; tip at the pivot, pointing +Y into the Pico
   {
-    const tip = [L.pico_cx, L.pico_y0 + 2.6, L.pico_zt + 1.35];
+    const tip = [L.pico_cx, L.pico_y0 + 2.6, L.usb_cz];
     const o = fx('usb_micro', tip);
     const [x, y, z] = tip;
     P.add(o, rboxGeo(x - 3.4, x + 3.4, y - 7.5, y, z - 0.9, z + 0.9, 0.3), P.mat(o, COLOR.metal, { metalness: 0.6, roughness: 0.3 }));
