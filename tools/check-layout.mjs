@@ -27,8 +27,8 @@ function bbox(file) {
 const expected = {
   'sanad-body.stl': [2 * L.ear_x1, L.Y_out, L.H],
   'sanad-sensor-pad.stl': [L.bump_x1 - L.bump_x0, L.bump_y1 - L.bump_y0, p.boss_h + p.floor + 1.2],
-  'sanad-tray.stl': [L.X_in - 0.5, L.Y_in - 0.5, p.tray_t + 2.2],
-  'sanad-lid.stl': [2 * L.ear_x1, L.Y_out, L.H_total - (L.tray_z1 + p.sw_H + 0.2)],
+  'sanad-tray.stl': [L.X_in - 0.5, L.Y_in - 0.5, p.tray_t + 1.1],
+  'sanad-lid.stl': [2 * L.ear_x1, L.Y_out, L.H_total - (L.tray_z1 + 0.1)],
 };
 
 let ok = true;
