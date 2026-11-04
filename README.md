@@ -1,14 +1,64 @@
-# Sanad band v2b: 3D assembly visualizer
+# Sanad band v2b
 
-An animated, step-by-step 3D walkthrough of how the **Sanad wrist band body (v2b, 4 Nov 2026)** goes together, from the bare print to wearing it on the wrist.
+The wrist band body for the Sanad wearable: print files, CAD source, an animated 3D assembly guide and a PDF guide.
 
-The Pico 2 W goes in upside-down with every pin kept, and the layers follow Yassen's notes. It follows the 12 steps of *Sanad-band-assembly-guide-v2b.pdf*. The four printed parts are the real v2b print files. Everything else sits where the CAD model puts it.
+**Do not print yet.** The Pico header, MAX30102 board, TP4056 and battery sizes are still estimates, and nothing has been test-fitted. The TP4056 must be 17.1 mm wide or less, because it sits between the pin rows.
 
-The earlier v1 version of this guide is still in git on the `main` branch.
+## The design
 
-**Do not print yet.** The Pico header, MAX30102 board, TP4056 and battery sizes are still estimates. The TP4056 must be 17.1 mm wide or less, because it sits between the pin rows.
+- **Size:** 43.0 × 54.6 × 14.0 mm, plus the 1 mm sensor bump. Takes any 22 mm quick-release strap.
+- **Pico 2 W:** fitted upside-down, so every header pin stays whole and the board still works in other projects. The long pins pass through slots in the tray and stop in pockets in the lid.
+- **Layer 1, on the floor:** Pico 2 W, MAX30102, coin motor, push button, small parts.
+- **Layer 2, on the tray:** TP4056 and MPU-6050 between the pin rows, battery beside them, slide switch.
+- **Ports side:** micro-USB, USB-C and the power switch. **Button side:** the cancel button.
 
-## What's in it
+The pin map and code are the same as v1.
+
+## What's in this repo
+
+```
+docs/             Sanad-band-assembly-guide-v2b.pdf: print, wiring and assembly guide
+models/           the four print files
+cad/              the parametric CAD source and its fit checks
+index.html, src/  the animated 3D assembly guide
+archive/          older designs, kept for reference
+```
+
+## Still estimated
+
+Section 3 of the [PDF guide](docs/Sanad-band-assembly-guide-v2b.pdf) lists every size that needs calipers and the largest size that fits. To use your numbers:
+
+1. Put them in `MEASURE` at the top of `cad/build.py`.
+2. Copy any changed values into `PARAMS` in `src/layout.js`.
+3. Rebuild and check (below).
+
+## Rebuild the print files
+
+The CAD needs Python with `numpy`, `trimesh` and `manifold3d`.
+
+```bash
+python cad/build.py
+```
+
+```bash
+python cad/check.py
+```
+
+```bash
+python cad/wires.py
+```
+
+`build.py` writes the four print files to `models/`. `check.py` tests every electronic part against every printed part. `wires.py` tests all 23 wire routes as 0.8 mm tubes. The lugs come from the two v1 files in `cad/v1-lugs/`.
+
+Then confirm the guide still matches:
+
+```bash
+node tools/check-layout.mjs
+```
+
+## The 3D assembly guide
+
+An animated, step-by-step walkthrough, from the bare print to wearing it on the wrist. It follows the 12 steps of the PDF guide.
 
 | Step | What it shows |
 |---|---|
@@ -33,45 +83,41 @@ Controls:
 - Keyboard: Space plays or pauses, ← and → change step.
 - Links go straight to a step, for example `#step-09`.
 
-## Run it
+### Run it
 
 It's a static page (three.js from a CDN, no build step). Browsers won't load the STL files from `file://`, so serve the folder:
 
 ```bash
-python3 -m http.server 8000
+python -m http.server 8000
 ```
 
 Then open <http://localhost:8000>. Any static host works too, GitHub Pages included (`.nojekyll` is already there).
 
-## Files
+### Files
 
 ```
 index.html        page and controls
 styles.css        look (Yassen design system: ink borders, hard shadows, mint, Elms Sans)
-src/layout.js     every position: matches layout() in ../v2b-guide-layout/cad/build.py
+src/layout.js     every position: matches layout() in cad/build.py
 src/parts.js      printed parts from the STLs + stand-ins for the electronics and tools
-src/wires.js      wire routes, the ones checked in ../v2b-guide-layout/cad/wires.py
+src/wires.js      wire routes, the same ones checked in cad/wires.py
 src/steps.js      the 12 steps: text, timing, camera moves, callouts
 src/anim.js       a small keyframe timeline (scrubbing and jumping are exact)
 src/main.js       renderer, playback, camera, callouts, controls
-models/*.stl      the four v2b print files, unchanged (print orientation)
 ```
 
-The STLs are loaded as delivered (print orientation) and turned back into their assembled positions in `src/parts.js`: the lid is flipped 180° about X and lifted to the top, and the pad and tray are moved back to their seats. `node tools/check-layout.mjs` confirms each STL still matches the layout numbers (within 0.01 mm).
+The STLs are loaded as delivered (print orientation) and turned back into their assembled positions in `src/parts.js`: the lid is flipped 180° about X and lifted to the top, and the pad and tray are moved back to their seats.
 
 The Pico is built parts-up and turned 180° about its long axis as its home pose, so it can sit parts-up on the bench and turn over during Step 5.
 
-## When the model changes
-
-Caliper measurements will regenerate the print files. To bring this visualizer along:
-
-1. Put the numbers in `MEASURE` in `../v2b-guide-layout/cad/build.py` and rebuild.
-2. Copy the four STLs from `../v2b-guide-layout/print/` into `models/`, dropping `v2b-` from their names.
-3. Copy any changed values into `PARAMS` in `src/layout.js` (same meaning). Every board and pin position is derived from those numbers. Wire routes also use a few fixed positions, so check Steps 6 to 9 after a big change.
-4. Run `node tools/check-layout.mjs` to confirm the STLs and the layout agree.
-
 ## Caveats
 
-- Electronics are simplified stand-ins, sized from estimates. The Pico header, MAX30102 board, TP4056 and battery have not been measured yet.
-- Wire paths are schematic. They were checked for clashes as 0.8 mm tubes, but your wires will bend differently.
+- Electronics are simplified stand-ins, sized from estimates.
+- Wire paths are schematic. Your wires will bend differently. Wire routes also use a few fixed positions, so check Steps 6 to 9 after a big change.
 - TP4056 pad order and LED position vary between module makers; check the silkscreen on yours.
+- The Wi-Fi antenna faces the wrist with the MPU-6050 above it. This hasn't been tested.
+
+## Older designs
+
+- `archive/Sanad-band-assembly-guide-v1.pdf`: the v1 guide, which cuts the Pico pins. Don't follow it for this design.
+- `archive/v2-flipped-pico/`: the first flipped layout, with the TP4056 on the floor. It's the fallback if your TP4056 is too wide to sit between the pin rows.

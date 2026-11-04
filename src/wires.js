@@ -1,6 +1,6 @@
 // Wires, following the pin map in the assembly guide (page 5).
 // Routes are drawn as tubes that "draw on" (pose key k: 0..1). They are the
-// routes checked for clashes in v2b-guide-layout/cad/wires.py, but your wires
+// routes checked for clashes in cad/wires.py, but your wires
 // will bend differently.
 
 import * as THREE from 'three';

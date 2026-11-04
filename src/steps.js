@@ -1,6 +1,6 @@
 // The assembly, step by step, for the Sanad band v2b: the Pico goes in
 // upside-down with every pin kept. Step numbers and wording follow
-// Sanad-band-assembly-guide-v2b.pdf.
+// docs/Sanad-band-assembly-guide-v2b.pdf.
 //
 // Each step has:
 //   items   instructions, each with the time (s) its animation starts

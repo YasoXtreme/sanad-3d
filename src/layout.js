@@ -1,5 +1,5 @@
 // Every position in the visualizer comes from here.
-// This matches `layout()` in v2b-guide-layout/cad/build.py, so the stand-in
+// This matches `layout()` in cad/build.py, so the stand-in
 // parts sit exactly where the CAD model puts them.
 //
 // Axes (as worn, same as v1):
